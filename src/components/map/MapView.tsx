@@ -263,6 +263,8 @@ export function MapView() {
     if (m.getSource('route-line')) {
       (m.getSource('route-line') as maplibregl.GeoJSONSource).setData(routeGeojson);
     } else {
+      // Insert below listing pins if they exist; otherwise add on top (pins added later will cover route)
+      const beforePins = m.getLayer('listings-circle') ? 'listings-circle' : undefined;
       m.addSource('route-line', { type: 'geojson', data: routeGeojson });
       m.addLayer({
         id: 'route-line-casing',
@@ -270,7 +272,7 @@ export function MapView() {
         source: 'route-line',
         layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: { 'line-color': '#0a1628', 'line-width': 5, 'line-opacity': 0.8 },
-      }, 'listings-circle');
+      }, beforePins);
       m.addLayer({
         id: 'route-line-fill',
         type: 'line',
@@ -282,7 +284,7 @@ export function MapView() {
           'line-opacity': 0.95,
           'line-dasharray': [2, 1.5],
         },
-      }, 'listings-circle');
+      }, beforePins);
     }
   }, [selectedListing, styleReady]);
 
