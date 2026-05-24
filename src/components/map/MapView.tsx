@@ -248,6 +248,29 @@ export function MapView() {
         'circle-opacity': 0.95,
       },
     });
+    m.addLayer({
+      id: 'hover-highlight-label',
+      type: 'symbol',
+      source: 'hover-highlight',
+      layout: {
+        'text-field': [
+          'case',
+          ['>', ['get', 'rank'], 0],
+          ['to-string', ['get', 'rank']],
+          ['concat', '$', ['to-string', ['get', 'price']]],
+        ],
+        'text-font': ['Open Sans Bold'],
+        'text-size': 12,
+        'text-anchor': 'center',
+        'text-allow-overlap': true,
+        'icon-allow-overlap': true,
+      },
+      paint: {
+        'text-color': '#ffffff',
+        'text-halo-color': '#92400e',
+        'text-halo-width': 1,
+      },
+    });
   }, [listings, styleReady, rankedListingIds, setSelectedListing, setHoveredListingId, setActiveTab]);
 
   // ── Hover / selection highlight ──────────────────────────────────────────────
@@ -263,15 +286,20 @@ export function MapView() {
       ? (listings?.find((l) => l.id === hoveredListingId) ?? null)
       : selectedListing;
 
+    const rank = activeListing ? rankedListingIds.indexOf(activeListing.id) + 1 : 0;
+
     (m.getSource('hover-highlight') as maplibregl.GeoJSONSource).setData({
       type: 'FeatureCollection',
       features: activeListing ? [{
         type: 'Feature',
         geometry: { type: 'Point', coordinates: [activeListing.lon, activeListing.lat] },
-        properties: {},
+        properties: {
+          rank: rank > 0 ? rank : 0,
+          price: activeListing.pricePerMonth,
+        },
       }] : [],
     });
-  }, [hoveredListingId, selectedListing, listings, styleReady]);
+  }, [hoveredListingId, selectedListing, listings, styleReady, rankedListingIds]);
 
   // ── Route line to nearest subway (FR-2.5) ────────────────────────────────────
   useEffect(() => {

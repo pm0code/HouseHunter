@@ -146,7 +146,7 @@ export function PropertyDetailPanel({ listing }: { listing: PublishedListing }) 
           <section>
             <SectionHeader icon={House}>Details</SectionHeader>
             <Row icon={House}     label="Unit type"  value={listing.unitType.toUpperCase()} />
-            {listing.sqft && <Row icon={Ruler} label="Size" value={`${listing.sqft.toLocaleString()} sqft · $${Math.round(listing.pricePerMonth / listing.sqft)}/sqft`} />}
+            <Row icon={Ruler} label="Size" value={listing.sqft ? `${listing.sqft.toLocaleString()} sqft · $${Math.round(listing.pricePerMonth / listing.sqft)}/sqft` : 'Not listed'} />
             <Row icon={Armchair}      label="Furnished"       value={listing.furnished ? 'Yes' : 'No'} />
             <Row icon={CalendarBlank} label="Available from"  value={new Date(listing.availableFrom).toLocaleDateString()} />
             <Row icon={CalendarBlank} label="Available to"    value={new Date(listing.availableTo).toLocaleDateString()} />
