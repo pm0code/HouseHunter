@@ -8,6 +8,8 @@ import {
   Storefront,
   CurrencyDollar,
   MagnifyingGlass,
+  FloppyDisk,
+  Check,
   type Icon as PhosphorIcon,
 } from '@phosphor-icons/react';
 import { useSearchStore, PRIORITY_LABELS, type Priority } from '@/store/search';
@@ -178,10 +180,39 @@ function PriorityList() {
   );
 }
 
+const PRIORITIES_STORAGE_KEY = 'househunter:priorities';
+
 // ── Main panel ─────────────────────────────────────────────────────────────
 export function SearchPanel() {
-  const { neighborhood, setNeighborhood, setActiveTab, setHasSearched } = useSearchStore();
+  const {
+    neighborhood, setNeighborhood, setActiveTab, setHasSearched,
+    priorities, setPriorities,
+  } = useSearchStore();
   const [filters, setFilters] = useListingFilters();
+
+  const [savedPriorities, setSavedPriorities] = useState<Priority[] | null>(null);
+
+  // Hydrate priority order from localStorage on mount
+  useEffect(() => {
+    const raw = localStorage.getItem(PRIORITIES_STORAGE_KEY);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as Priority[];
+      setSavedPriorities(parsed);
+      setPriorities(parsed);
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const isSaved =
+    savedPriorities !== null &&
+    savedPriorities.length === priorities.length &&
+    savedPriorities.every((p, i) => p === priorities[i]);
+
+  function handleSavePriorities() {
+    localStorage.setItem(PRIORITIES_STORAGE_KEY, JSON.stringify(priorities));
+    setSavedPriorities([...priorities]);
+  }
 
   // Raw string values for price inputs — committed/clamped on blur
   const [rawMin, setRawMin] = useState(String(filters.minPrice));
@@ -304,6 +335,21 @@ export function SearchPanel() {
             Grab <DotsSixVertical size={12} className="inline translate-y-[1px]" /> and drag to reorder.
           </p>
           <PriorityList />
+          <button
+            onClick={handleSavePriorities}
+            disabled={isSaved}
+            className={`mt-3 flex items-center gap-1.5 text-xs font-medium transition-colors ${
+              isSaved
+                ? 'text-green-600 dark:text-green-400 cursor-default'
+                : 'text-primary hover:opacity-75'
+            }`}
+          >
+            {isSaved ? (
+              <><Check size={13} weight="bold" />Order saved</>
+            ) : (
+              <><FloppyDisk size={13} weight="bold" />Save order</>
+            )}
+          </button>
         </div>
 
         {/* Furnished */}

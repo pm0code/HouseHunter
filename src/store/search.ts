@@ -24,6 +24,8 @@ interface SearchState {
   hasSearched: boolean;
   setHasSearched: (v: boolean) => void;
 
+  setPriorities: (priorities: Priority[]) => void;
+
   // Ordered listing IDs as shown in the sidebar — used to number map pins
   rankedListingIds: string[];
   setRankedListingIds: (ids: string[]) => void;
@@ -45,6 +47,8 @@ export const useSearchStore = create<SearchState>((set) => ({
       arr.splice(to, 0, item);
       return { priorities: arr };
     }),
+
+  setPriorities: (priorities) => set({ priorities }),
 
   hasSearched: false,
   setHasSearched: (hasSearched) => set({ hasSearched }),
