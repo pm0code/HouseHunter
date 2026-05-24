@@ -87,13 +87,23 @@ export async function GET(req: NextRequest) {
     .orderBy(listings.pricePerMonth);
 
   // Filter by subway line if specified
-  const filtered = lines.length
+  const lineFiltered = lines.length
     ? rows.filter((r) =>
         lines.some((line) =>
           line.split('/').some((l) => r.stationLines?.includes(l)),
         ),
       )
     : rows;
+
+  // Deduplicate: sourceUrl is the canonical key; fall back to address for listings
+  // without one. Prevents re-scraped duplicates from appearing in results.
+  const seen = new Set<string>();
+  const filtered = lineFiltered.filter((r) => {
+    const key = r.sourceUrl ?? r.address;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
   const result: PublishedListing[] = filtered.map((r) => ({
     id: r.id,

@@ -229,26 +229,49 @@ export function MapView() {
       m.getCanvas().style.cursor = '';
       setHoveredListingId(null);
     });
+
+    // Hover-highlight overlay — separate GeoJSON source so it renders at exact
+    // listing coordinates regardless of clustering. Added on top of all layers.
+    m.addSource('hover-highlight', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] },
+    });
+    m.addLayer({
+      id: 'hover-highlight-circle',
+      type: 'circle',
+      source: 'hover-highlight',
+      paint: {
+        'circle-color': '#f59e0b',
+        'circle-radius': 17,
+        'circle-stroke-color': '#92400e',
+        'circle-stroke-width': 2.5,
+        'circle-opacity': 0.95,
+      },
+    });
   }, [listings, styleReady, rankedListingIds, setSelectedListing, setHoveredListingId, setActiveTab]);
 
   // ── Hover / selection highlight ──────────────────────────────────────────────
+  // Uses a dedicated GeoJSON source so the amber dot appears at exact listing
+  // coordinates even when the listing is inside a cluster bubble.
   useEffect(() => {
-    if (!map.current || !map.current.getLayer('listings-circle')) return;
-    // hover takes priority; selection is the persistent fallback
-    const activeId = hoveredListingId ?? selectedListing?.id ?? '';
-    map.current.setPaintProperty('listings-circle', 'circle-color', [
-      'case',
-      ['==', ['get', 'id'], activeId],
-      '#f59e0b',  /* amber highlight */
-      '#3b82f6',  /* blue default    */
-    ]);
-    map.current.setPaintProperty('listings-circle', 'circle-stroke-color', [
-      'case',
-      ['==', ['get', 'id'], activeId],
-      '#92400e',
-      '#1e3a6e',
-    ]);
-  }, [hoveredListingId, selectedListing]);
+    if (!map.current || !styleReady) return;
+    const m = map.current;
+    if (!m.getSource('hover-highlight')) return;
+
+    // Hover takes priority; selected listing is the persistent fallback
+    const activeListing = hoveredListingId
+      ? (listings?.find((l) => l.id === hoveredListingId) ?? null)
+      : selectedListing;
+
+    (m.getSource('hover-highlight') as maplibregl.GeoJSONSource).setData({
+      type: 'FeatureCollection',
+      features: activeListing ? [{
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [activeListing.lon, activeListing.lat] },
+        properties: {},
+      }] : [],
+    });
+  }, [hoveredListingId, selectedListing, listings, styleReady]);
 
   // ── Route line to nearest subway (FR-2.5) ────────────────────────────────────
   useEffect(() => {
