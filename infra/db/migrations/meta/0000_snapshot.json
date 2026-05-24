@@ -1,0 +1,540 @@
+{
+  "id": "d8e65cdb-81a7-4160-9fce-84ed1ad76d2b",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.listings": {
+      "name": "listings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unit_type": {
+          "name": "unit_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "furnished": {
+          "name": "furnished",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "available_from": {
+          "name": "available_from",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "available_to": {
+          "name": "available_to",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price_per_month": {
+          "name": "price_per_month",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "utilities_included": {
+          "name": "utilities_included",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "broker_fee": {
+          "name": "broker_fee",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "security_deposit": {
+          "name": "security_deposit",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "contact_email": {
+          "name": "contact_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contact_phone": {
+          "name": "contact_phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "landlord_name": {
+          "name": "landlord_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "photos": {
+          "name": "photos",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::text[]"
+        },
+        "submission_token": {
+          "name": "submission_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "approval_token": {
+          "name": "approval_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lat": {
+          "name": "lat",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lon": {
+          "name": "lon",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "geom": {
+          "name": "geom",
+          "type": "geometry(Point, 4326)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nearest_station_id": {
+          "name": "nearest_station_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "walk_time_seconds": {
+          "name": "walk_time_seconds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "route_geo_json": {
+          "name": "route_geo_json",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nta_id": {
+          "name": "nta_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "safety_score": {
+          "name": "safety_score",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "safety_tier": {
+          "name": "safety_tier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "listings_status_idx": {
+          "name": "listings_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "listings_price_idx": {
+          "name": "listings_price_idx",
+          "columns": [
+            {
+              "expression": "price_per_month",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "listings_geom_idx": {
+          "name": "listings_geom_idx",
+          "columns": [
+            {
+              "expression": "\"geom\"",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gist",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "listings_nearest_station_id_subway_stations_id_fk": {
+          "name": "listings_nearest_station_id_subway_stations_id_fk",
+          "tableFrom": "listings",
+          "tableTo": "subway_stations",
+          "columnsFrom": [
+            "nearest_station_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "listings_nta_id_nta_polygons_id_fk": {
+          "name": "listings_nta_id_nta_polygons_id_fk",
+          "tableFrom": "listings",
+          "tableTo": "nta_polygons",
+          "columnsFrom": [
+            "nta_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "listings_submission_token_unique": {
+          "name": "listings_submission_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "submission_token"
+          ]
+        },
+        "listings_approval_token_unique": {
+          "name": "listings_approval_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "approval_token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.nta_polygons": {
+      "name": "nta_polygons",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nta_code": {
+          "name": "nta_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nta_name": {
+          "name": "nta_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "borough": {
+          "name": "borough",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "geom": {
+          "name": "geom",
+          "type": "geometry(MultiPolygon, 4326)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "nta_polygons_geom_idx": {
+          "name": "nta_polygons_geom_idx",
+          "columns": [
+            {
+              "expression": "\"geom\"",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gist",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "nta_polygons_nta_code_unique": {
+          "name": "nta_polygons_nta_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nta_code"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.nta_safety_scores": {
+      "name": "nta_safety_scores",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nta_id": {
+          "name": "nta_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "incident_count": {
+          "name": "incident_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "incidents_per_sqkm": {
+          "name": "incidents_per_sqkm",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tier": {
+          "name": "tier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "computed_at": {
+          "name": "computed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "nta_safety_scores_nta_id_nta_polygons_id_fk": {
+          "name": "nta_safety_scores_nta_id_nta_polygons_id_fk",
+          "tableFrom": "nta_safety_scores",
+          "tableTo": "nta_polygons",
+          "columnsFrom": [
+            "nta_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "nta_safety_scores_nta_id_unique": {
+          "name": "nta_safety_scores_nta_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nta_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.subway_stations": {
+      "name": "subway_stations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "station_id": {
+          "name": "station_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lines": {
+          "name": "lines",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::text[]"
+        },
+        "ada": {
+          "name": "ada",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "lat": {
+          "name": "lat",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lon": {
+          "name": "lon",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "geom": {
+          "name": "geom",
+          "type": "geometry(Point, 4326)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "borough": {
+          "name": "borough",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "complex_id": {
+          "name": "complex_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "subway_stations_geom_idx": {
+          "name": "subway_stations_geom_idx",
+          "columns": [
+            {
+              "expression": "\"geom\"",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gist",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "subway_stations_station_id_unique": {
+          "name": "subway_stations_station_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "station_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

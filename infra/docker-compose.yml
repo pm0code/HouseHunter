@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgis/postgis:17-3.5
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-househunter}
+      POSTGRES_USER: ${POSTGRES_USER:-househunter}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-househunter_dev}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-househunter}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  valkey:
+    image: valkey/valkey:8
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - valkey_data:/data
+    command: valkey-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # OSRM requires a pre-processed pedestrian graph — see infra/scripts/osrm-setup.md
+  osrm:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data/osrm:/data
+    command: osrm-routed --algorithm mld /data/new-york-city.osrm --max-table-size 10000
+    profiles:
+      - enrichment
+
+  # Nominatim requires a one-time OSM import — set NOMINATIM_PBF_URL first
+  nominatim:
+    image: mediagis/nominatim:4.4
+    restart: unless-stopped
+    ports:
+      - "7070:8080"
+    volumes:
+      - nominatim_data:/var/lib/postgresql/14/main
+    environment:
+      PBF_URL: ${NOMINATIM_PBF_URL:-}
+      REPLICATION_URL: ""
+      NOMINATIM_PASSWORD: ${NOMINATIM_PASSWORD:-nominatim_dev}
+    profiles:
+      - enrichment
+
+  # Dev SMTP — view captured emails at http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+volumes:
+  postgres_data:
+  valkey_data:
+  nominatim_data:

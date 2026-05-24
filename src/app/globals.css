@@ -1,0 +1,90 @@
+/* MapLibre GL JS base styles — must appear before @tailwind directives */
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ── Dark theme palette ───────────────────────────────────────────── */
+    --background:         215 32%  9%;   /* #0e1520  deep navy canvas      */
+    --foreground:         210 30% 92%;   /* #dde6f2  soft off-white text    */
+
+    --card:               215 32% 12%;   /* #131e2e  elevated surface       */
+    --card-foreground:    210 30% 92%;
+
+    --popover:            215 32% 12%;
+    --popover-foreground: 210 30% 92%;
+
+    --primary:            217 91% 60%;   /* #3b82f6  vivid blue CTA         */
+    --primary-foreground: 0   0% 100%;   /* white                           */
+
+    --secondary:          215 32% 18%;   /* #1d2d40  secondary surface      */
+    --secondary-foreground: 210 30% 92%;
+
+    --muted:              215 32% 15%;   /* #172030  subtle background      */
+    --muted-foreground:   215 20% 55%;   /* #7e93ab  placeholder / meta     */
+
+    --accent:             215 40% 22%;   /* #1e3348  hover / selection      */
+    --accent-foreground:  210 30% 92%;
+
+    --destructive:        0  84% 60%;    /* #f93a3a  error / danger         */
+    --destructive-foreground: 0 0% 100%;
+
+    --border:             215 32% 20%;   /* #213040  hairline borders       */
+    --input:              215 32% 16%;   /* #1a2538  input backgrounds      */
+    --ring:               217 91% 60%;   /* same as primary                 */
+
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html,
+  body,
+  #__next {
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+/* ── MapLibre control overrides for dark theme ─────────────────────────── */
+.maplibregl-ctrl-group {
+  background: hsl(215 32% 14%) !important;
+  border: 1px solid hsl(215 32% 22%) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+}
+
+.maplibregl-ctrl-group button {
+  background-color: transparent !important;
+  color: hsl(210 30% 80%) !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background-color: hsl(215 32% 20%) !important;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top-color: hsl(215 32% 22%) !important;
+}
+
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(0.8) !important;
+}
+
+.maplibregl-ctrl-attrib {
+  background: hsl(215 32% 10% / 0.85) !important;
+  color: hsl(215 20% 55%) !important;
+  border-radius: 4px !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: hsl(217 91% 70%) !important;
+}

@@ -1,0 +1,4 @@
+-- Auto-run by Docker on first postgres container start.
+CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS postgis_topology;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
