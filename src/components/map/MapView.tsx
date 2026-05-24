@@ -39,7 +39,7 @@ export function MapView() {
     mapResetSignal,
   } = useMapStore();
 
-  const { rankedListingIds } = useSearchStore();
+  const { rankedListingIds, setActiveTab } = useSearchStore();
 
   const [filters] = useListingFilters();
   const { data: listings } = useListings(filters);
@@ -216,6 +216,7 @@ export function MapView() {
       const id = feature.properties?.id as string;
       const listing = listings.find((l) => l.id === id) ?? null;
       setSelectedListing(listing);
+      if (listing) setActiveTab('results');
     });
 
     m.on('mouseenter', 'listings-unclustered', (e) => {
@@ -228,7 +229,7 @@ export function MapView() {
       m.getCanvas().style.cursor = '';
       setHoveredListingId(null);
     });
-  }, [listings, styleReady, rankedListingIds, setSelectedListing, setHoveredListingId]);
+  }, [listings, styleReady, rankedListingIds, setSelectedListing, setHoveredListingId, setActiveTab]);
 
   // ── Hover / selection highlight ──────────────────────────────────────────────
   useEffect(() => {
