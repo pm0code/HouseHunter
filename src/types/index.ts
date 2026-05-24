@@ -76,7 +76,7 @@ export interface ListingFilters {
 
 export const DEFAULT_FILTERS: ListingFilters = {
   minPrice: 1500,
-  maxPrice: 3500,
+  maxPrice: 5000,
   unitTypes: [],
   lines: [],
   maxWalkMinutes: 15,

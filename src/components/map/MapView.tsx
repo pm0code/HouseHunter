@@ -89,7 +89,7 @@ export function MapView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Listing pins ─────────────────────────────────────────────────────────────
+  // ── Listing pins (clustered) ──────────────────────────────────────────────
   useEffect(() => {
     if (!map.current || !styleReady || !listings) return;
     const m = map.current;
@@ -117,12 +117,50 @@ export function MapView() {
       return;
     }
 
-    m.addSource('listings', { type: 'geojson', data: geojson });
+    m.addSource('listings', {
+      type: 'geojson',
+      data: geojson,
+      cluster: true,
+      clusterMaxZoom: 13,
+      clusterRadius: 50,
+    });
 
+    // Cluster bubble
+    m.addLayer({
+      id: 'listings-cluster',
+      type: 'circle',
+      source: 'listings',
+      filter: ['has', 'point_count'],
+      paint: {
+        'circle-color': '#3b82f6',
+        'circle-radius': ['step', ['get', 'point_count'], 18, 10, 22, 30, 26],
+        'circle-stroke-color': '#1e3a6e',
+        'circle-stroke-width': 2,
+        'circle-opacity': 0.9,
+      },
+    });
+
+    // Cluster count label
+    m.addLayer({
+      id: 'listings-cluster-count',
+      type: 'symbol',
+      source: 'listings',
+      filter: ['has', 'point_count'],
+      layout: {
+        'text-field': ['get', 'point_count_abbreviated'],
+        'text-font': ['Open Sans Bold'],
+        'text-size': 12,
+        'text-allow-overlap': true,
+      },
+      paint: { 'text-color': '#ffffff' },
+    });
+
+    // Unclustered pins
     m.addLayer({
       id: 'listings-circle',
       type: 'circle',
       source: 'listings',
+      filter: ['!', ['has', 'point_count']],
       paint: {
         'circle-color': '#3b82f6',
         'circle-radius': 14,
@@ -136,6 +174,7 @@ export function MapView() {
       id: 'listings-unclustered',
       type: 'symbol',
       source: 'listings',
+      filter: ['!', ['has', 'point_count']],
       layout: {
         'text-field': [
           'case',
@@ -155,6 +194,21 @@ export function MapView() {
         'text-halo-width': 1,
       },
     });
+
+    // Zoom in on cluster click
+    m.on('click', 'listings-cluster', (e) => {
+      const features = m.queryRenderedFeatures(e.point, { layers: ['listings-cluster'] });
+      const clusterId = features[0]?.properties?.cluster_id as number | undefined;
+      if (!clusterId) return;
+      (m.getSource('listings') as maplibregl.GeoJSONSource)
+        .getClusterExpansionZoom(clusterId)
+        .then((zoom) => {
+          m.easeTo({ center: (features[0].geometry as GeoJSON.Point).coordinates as [number, number], zoom });
+        })
+        .catch(() => {});
+    });
+    m.on('mouseenter', 'listings-cluster', () => { m.getCanvas().style.cursor = 'pointer'; });
+    m.on('mouseleave', 'listings-cluster', () => { m.getCanvas().style.cursor = ''; });
 
     m.on('click', 'listings-unclustered', (e) => {
       const feature = e.features?.[0];
@@ -194,6 +248,42 @@ export function MapView() {
       '#1e3a6e',
     ]);
   }, [hoveredListingId, selectedListing]);
+
+  // ── Route line to nearest subway (FR-2.5) ────────────────────────────────────
+  useEffect(() => {
+    if (!map.current || !styleReady) return;
+    const m = map.current;
+
+    const routeGeojson: GeoJSON.FeatureCollection = {
+      type: 'FeatureCollection',
+      features: selectedListing?.routeGeoJson ? [selectedListing.routeGeoJson] : [],
+    };
+
+    if (m.getSource('route-line')) {
+      (m.getSource('route-line') as maplibregl.GeoJSONSource).setData(routeGeojson);
+    } else {
+      m.addSource('route-line', { type: 'geojson', data: routeGeojson });
+      m.addLayer({
+        id: 'route-line-casing',
+        type: 'line',
+        source: 'route-line',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: { 'line-color': '#0a1628', 'line-width': 5, 'line-opacity': 0.8 },
+      }, 'listings-circle');
+      m.addLayer({
+        id: 'route-line-fill',
+        type: 'line',
+        source: 'route-line',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          'line-color': '#f59e0b',
+          'line-width': 3,
+          'line-opacity': 0.95,
+          'line-dasharray': [2, 1.5],
+        },
+      }, 'listings-circle');
+    }
+  }, [selectedListing, styleReady]);
 
   // ── Pan to selected listing ───────────────────────────────────────────────────
   useEffect(() => {
@@ -268,16 +358,39 @@ export function MapView() {
                 },
                 'listings-circle',
               );
+              m.addLayer(
+                {
+                  id: 'nta-safety-label',
+                  type: 'symbol',
+                  source: 'nta-safety',
+                  minzoom: 13,
+                  layout: {
+                    'text-field': ['upcase', ['get', 'tier']],
+                    'text-font': ['Open Sans Bold'],
+                    'text-size': 9,
+                    'text-allow-overlap': false,
+                  },
+                  paint: {
+                    'text-color': '#ffffff',
+                    'text-halo-color': '#000000',
+                    'text-halo-width': 1.5,
+                    'text-opacity': 0.8,
+                  },
+                },
+                'listings-circle',
+              );
             }
           })
           .catch(console.error);
       } else {
         if (m.getLayer('nta-safety-fill')) m.setLayoutProperty('nta-safety-fill', 'visibility', 'visible');
         if (m.getLayer('nta-safety-outline')) m.setLayoutProperty('nta-safety-outline', 'visibility', 'visible');
+        if (m.getLayer('nta-safety-label')) m.setLayoutProperty('nta-safety-label', 'visibility', 'visible');
       }
     } else {
       if (m.getLayer('nta-safety-fill')) m.setLayoutProperty('nta-safety-fill', 'visibility', 'none');
       if (m.getLayer('nta-safety-outline')) m.setLayoutProperty('nta-safety-outline', 'visibility', 'none');
+      if (m.getLayer('nta-safety-label')) m.setLayoutProperty('nta-safety-label', 'visibility', 'none');
     }
   }, [safetyOverlayVisible, styleReady]);
 

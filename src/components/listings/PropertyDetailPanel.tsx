@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import {
   X,
   House,
@@ -17,6 +18,8 @@ import {
   ShieldWarning,
   ArrowSquareOut,
   EnvelopeSimple,
+  CaretLeft,
+  CaretRight,
   type Icon as PhosphorIcon,
 } from '@phosphor-icons/react';
 import { useMapStore } from '@/store/map';
@@ -43,8 +46,67 @@ function SectionHeader({ icon: Icon, children }: { icon: PhosphorIcon; children:
   );
 }
 
+function PhotoCarousel({ photos }: { photos: string[] }) {
+  const [idx, setIdx] = useState(0);
+  if (!photos.length) return null;
+
+  const prev = () => setIdx((i) => (i - 1 + photos.length) % photos.length);
+  const next = () => setIdx((i) => (i + 1) % photos.length);
+  const src = photos[idx].startsWith('http') ? photos[idx] : `/uploads/${photos[idx]}`;
+
+  return (
+    <div className="relative w-full overflow-hidden bg-muted">
+      <img
+        key={idx}
+        src={src}
+        alt={`Photo ${idx + 1} of ${photos.length}`}
+        className="w-full h-52 object-cover"
+      />
+      {photos.length > 1 && (
+        <>
+          <button
+            onClick={prev}
+            aria-label="Previous photo"
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 transition-colors"
+          >
+            <CaretLeft size={16} weight="bold" />
+          </button>
+          <button
+            onClick={next}
+            aria-label="Next photo"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 transition-colors"
+          >
+            <CaretRight size={16} weight="bold" />
+          </button>
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+            {photos.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setIdx(i)}
+                aria-label={`Go to photo ${i + 1}`}
+                className={`w-1.5 h-1.5 rounded-full transition-colors ${i === idx ? 'bg-white' : 'bg-white/40'}`}
+              />
+            ))}
+          </div>
+          <span className="absolute top-2 right-2 text-xs bg-black/50 text-white rounded px-1.5 py-0.5">
+            {idx + 1}/{photos.length}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function PropertyDetailPanel({ listing }: { listing: PublishedListing }) {
   const { setSelectedListing } = useMapStore();
+
+  // Escape key closes panel (WCAG keyboard nav)
+  const close = useCallback(() => setSelectedListing(null), [setSelectedListing]);
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [close]);
 
   const safetyColor =
     listing.safetyTier === 'low' ? 'text-green-500'
@@ -69,18 +131,7 @@ export function PropertyDetailPanel({ listing }: { listing: PublishedListing }) 
 
       <div className="flex-1 overflow-y-auto">
         {/* Photo carousel */}
-        {listing.photos.length > 0 && (
-          <div className="flex gap-2 p-3 overflow-x-auto">
-            {listing.photos.map((photo, i) => (
-              <img
-                key={photo}
-                src={photo.startsWith('http') ? photo : `/uploads/${photo}`}
-                alt={`Photo ${i + 1}`}
-                className="h-48 w-72 object-cover rounded-md shrink-0"
-              />
-            ))}
-          </div>
-        )}
+        <PhotoCarousel photos={listing.photos} />
 
         <div className="px-4 py-3 space-y-4">
           {/* Price */}
@@ -95,7 +146,7 @@ export function PropertyDetailPanel({ listing }: { listing: PublishedListing }) 
           <section>
             <SectionHeader icon={House}>Details</SectionHeader>
             <Row icon={House}     label="Unit type"  value={listing.unitType.toUpperCase()} />
-            {listing.sqft && <Row icon={Ruler} label="Size" value={`${listing.sqft.toLocaleString()} sqft`} />}
+            {listing.sqft && <Row icon={Ruler} label="Size" value={`${listing.sqft.toLocaleString()} sqft · $${Math.round(listing.pricePerMonth / listing.sqft)}/sqft`} />}
             <Row icon={Armchair}      label="Furnished"       value={listing.furnished ? 'Yes' : 'No'} />
             <Row icon={CalendarBlank} label="Available from"  value={new Date(listing.availableFrom).toLocaleDateString()} />
             <Row icon={CalendarBlank} label="Available to"    value={new Date(listing.availableTo).toLocaleDateString()} />

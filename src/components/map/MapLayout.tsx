@@ -9,6 +9,32 @@ import { FilterPanel } from '@/components/filters/FilterPanel';
 import { PropertyDetailPanel } from '@/components/listings/PropertyDetailPanel';
 import { SearchPanel } from '@/components/search/SearchPanel';
 
+function SafetyLegend() {
+  return (
+    <div
+      role="note"
+      aria-label="Safety overlay legend"
+      className="flex flex-col gap-1 rounded-lg border border-border bg-card/90 backdrop-blur-sm px-3 py-2 text-xs shadow-md"
+    >
+      <p className="font-semibold text-foreground mb-0.5">Reported Incidents</p>
+      {[
+        { color: 'bg-green-500', label: 'Low', desc: 'Below avg.' },
+        { color: 'bg-amber-500', label: 'Med', desc: 'Average' },
+        { color: 'bg-red-500',   label: 'High', desc: 'Above avg.' },
+      ].map(({ color, label, desc }) => (
+        <div key={label} className="flex items-center gap-2">
+          <span className={`w-3 h-3 rounded-sm shrink-0 ${color}`} aria-hidden />
+          <span className="font-medium w-7">{label}</span>
+          <span className="text-muted-foreground">{desc}</span>
+        </div>
+      ))}
+      <p className="text-muted-foreground/70 mt-0.5 leading-tight">
+        NYPD data · prior 12 mo.
+      </p>
+    </div>
+  );
+}
+
 const MapView = dynamic(() => import('./MapView').then((m) => m.MapView), {
   ssr: false,
   loading: () => (
@@ -19,7 +45,7 @@ const MapView = dynamic(() => import('./MapView').then((m) => m.MapView), {
 });
 
 export function MapLayout() {
-  const { selectedListing, triggerMapReset } = useMapStore();
+  const { selectedListing, triggerMapReset, safetyOverlayVisible } = useMapStore();
   const { activeTab, setActiveTab } = useSearchStore();
 
   return (
@@ -35,6 +61,11 @@ export function MapLayout() {
           <ArrowCounterClockwise size={14} weight="bold" />
           Reset view
         </button>
+        {safetyOverlayVisible && (
+          <div className="absolute bottom-8 right-3 z-10">
+            <SafetyLegend />
+          </div>
+        )}
       </div>
 
       {/* Sidebar — 40% */}

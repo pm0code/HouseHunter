@@ -16,6 +16,8 @@ export async function GET(req: NextRequest) {
   const maxWalkMinutes = Number(sp.get('maxWalkMinutes') ?? 15);
   const furnished = sp.get('furnished') !== 'false';
   const maxCrimeTier = sp.get('maxCrimeTier') ?? 'any';
+  const availableFrom = sp.get('availableFrom'); // YYYY-MM-DD or null
+  const durationDays = Number(sp.get('durationDays') ?? 30);
 
   const cacheKey = `listings:${sp.toString()}`;
 
@@ -38,6 +40,15 @@ export async function GET(req: NextRequest) {
   if (unitTypes.length) conditions.push(inArray(listings.unitType, unitTypes as ('studio' | '1br' | '2br')[]));
   if (maxCrimeTier === 'medium') conditions.push(inArray(listings.safetyTier, ['low', 'medium']));
   if (maxCrimeTier === 'low') conditions.push(eq(listings.safetyTier, 'low'));
+
+  // Date filter: listing must be available for the entire requested window
+  if (availableFrom) {
+    const fromDate = availableFrom; // YYYY-MM-DD
+    const toDate = new Date(new Date(availableFrom).getTime() + durationDays * 86400000)
+      .toISOString().slice(0, 10);
+    conditions.push(lte(listings.availableFrom, fromDate));
+    conditions.push(gte(listings.availableTo, toDate));
+  }
 
 
   const rows = await db
